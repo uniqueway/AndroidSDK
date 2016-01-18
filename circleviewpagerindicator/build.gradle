@@ -1,0 +1,92 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+
+def GROUP_ID = 'com.uniqueway'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    sourceSets {
+        main.jniLibs.srcDirs = ['libs']
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:23.+'
+    compile files('libs/weiboSDKCore_3.1.2.jar')
+    compile files('libs/libammsdk.jar')
+    compile files('libs/open_sdk_r5509_lite.jar')
+    compile files('libs/otto-1.3.8.jar')
+}
+def isReleaseBuild() {
+    return VERSION_NAME.contains("SNAPSHOT") == false
+}
+
+def getRepositoryUsername() {
+    return hasProperty('NEXUS_USERNAME') ? NEXUS_USERNAME : ""
+}
+
+def getRepositoryPassword() {
+    return hasProperty('NEXUS_PASSWORD') ? NEXUS_PASSWORD : ""
+}
+
+repositories {
+    mavenCentral()
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        repository(url: RELEASE_REPOSITORY_URL) {
+            authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+        }
+        pom.project {
+            packaging 'aar'
+            description 'none'
+            groupId GROUP_ID
+            artifactId project.name
+            version android.defaultConfig.versionName
+        }
+    }
+}
+
+task showname{
+    println project.name
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.sourceFiles
+}
+
+artifacts {
+    archives androidSourcesJar
+    archives androidJavadocsJar
+}
