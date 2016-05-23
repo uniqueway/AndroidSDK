@@ -37,14 +37,11 @@ public class SocialShareActivity extends Activity implements IWeiboHandler.Respo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.es_activity_social_share);
-
-        getWindow().setGravity(Gravity.BOTTOM);
-
         info = (SocialInfo) getIntent().getExtras().getSerializable("info");
         scene = (SocialShareScene) getIntent().getExtras().getSerializable("scene");
-
+        if (info == null) finish();
+        setContentView(R.layout.es_activity_social_share);
+        getWindow().setGravity(Gravity.BOTTOM);
         initViews();
     }
 
@@ -129,8 +126,9 @@ public class SocialShareActivity extends Activity implements IWeiboHandler.Respo
                 BusProvider.getInstance().post(new ShareBusEvent(ShareBusEvent.TYPE_CANCEL, scene.getType()));
                 break;
             case WBConstants.ErrorCode.ERR_FAIL:
-                BusProvider.getInstance().post(new ShareBusEvent(ShareBusEvent.TYPE_FAILURE, scene.getType(), new Exception("WBConstants.ErrorCode.ERR_FAIL: "
-                        + baseResponse.errMsg)));
+                BusProvider.getInstance()
+                           .post(new ShareBusEvent(ShareBusEvent.TYPE_FAILURE, scene.getType(),
+                                   new Exception("WBConstants.ErrorCode.ERR_FAIL: " + baseResponse.errMsg)));
                 break;
         }
     }
@@ -143,7 +141,6 @@ public class SocialShareActivity extends Activity implements IWeiboHandler.Respo
             SocialSDK.shareToQCallback(requestCode, resultCode, data);
             finish();
         }
-
     }
 
     @Override
@@ -153,5 +150,4 @@ public class SocialShareActivity extends Activity implements IWeiboHandler.Respo
             finish();
         }
     }
-
 }
